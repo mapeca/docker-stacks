@@ -1,0 +1,94 @@
+version: "3.7"
+
+networks:
+  webservices:
+    external: true
+
+services:
+  caddy:
+    container_name: caddy
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      - CADDY_INGRESS_NETWORKS=proxy
+    networks:
+      - webservices
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - /opt/docker/caddy/Caddyfile:/etc/caddy/Caddyfile
+      - /opt/docker/caddy/templates:/etc/caddy/templates
+      - /opt/docker/caddy/data:/data
+      - /opt/docker/caddy/config:/config
+      - /opt/docker/caddy/log:/srv
+      - /opt/docker/goaccess/reports:/log-reports
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+  cloudflare-ddns:
+    container_name: cloudflare-ddns
+    image: joshava/cloudflare-ddns
+    restart: unless-stopped
+    volumes:
+      - /opt/docker/cloudflare-ddns/config.yaml:/app/config.yaml
+
+  # cloudflared:
+  #   image: cloudflare/cloudflared:latest
+  #   container_name: cloudflared
+  #   restart: unless-stopped
+  #   command: tunnel --no-autoupdate run
+  #   environment:
+  #     - TUNNEL_TOKEN=${CLOUDFLARED_TUNNEL_TOKEN}
+  #   networks:
+  #     - webservices
+  #   extra_hosts:
+  #     - host.docker.internal:host-gateway
+
+  zerotier:
+    container_name: zerotier-one
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    devices:
+      - /dev/net/tun
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - /var/lib/zerotier-one:/var/lib/zerotier-one
+    image: zyclonite/zerotier
+
+  adguard:
+    image: adguard/adguardhome
+    container_name: adguard
+    restart: unless-stopped
+    volumes:
+      - /opt/docker/adguard/work:/opt/adguardhome/work
+      - /opt/docker/adguard/conf:/opt/adguardhome/conf
+    network_mode: host
+      
+  wireguard-gui:
+    image: ghcr.io/wg-easy/wg-easy
+    container_name: wg-easy
+    environment:
+      - WG_HOST=${WIREGUARD_WG_HOST}
+      - PASSWORD_HASH=${WIREGUARD_PASSWORD_HASH}
+      - PORT=${WIREGUARD_GUI_PORT}
+      - WG_PORT=${WIREGUARD_PORT}
+      - WG_DEFAULT_DNS=${WIREGUARD_DEFAULT_DNS}
+    volumes:
+      - /opt/docker/wireguard-gui:/etc/wireguard
+    ports:
+      - ${WIREGUARD_PORT}:51820/udp
+      - ${WIREGUARD_GUI_PORT}:51821/tcp
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    sysctls:
+      net.ipv4.conf.all.src_valid_mark: 1
+      net.ipv4.ip_forward: 1
+    networks:
+      - webservices
+    restart: unless-stopped
+

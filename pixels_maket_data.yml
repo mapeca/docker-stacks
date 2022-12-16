@@ -1,0 +1,50 @@
+version: '3.8'
+networks:
+  webservices:
+    external: true
+    
+services:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: pixels-market-data-grafana
+    restart: unless-stopped
+    user: "0"
+    # ports:
+      # - "3000:3000"
+    volumes:
+      - /opt/docker/pixels-market-data/grafana:/var/lib/grafana
+    environment:
+      - GF_SERVER_ROOT_URL=${GF_SERVER_ROOT_URL}
+    networks:
+      - webservices
+      - default
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:latest
+    container_name: pixels-market-data-mysql
+    restart: unless-stopped
+    user: "0"
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    volumes:
+      - /srv/dev-disk-by-uuid-cc1534ce-6166-43dd-8b08-9c9403d63609/pixels-mysql:/var/lib/mysql
+
+  data-scrapper:
+    image: onedev.mperals.work/mapeca/pixels-market-data:latest
+    restart: on-failure:150
+    container_name: pixels-market-data-scrapper
+    environment:
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+    depends_on:
+      - mysql
+

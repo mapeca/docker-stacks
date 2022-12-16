@@ -1,0 +1,40 @@
+services:
+  db:
+    image: mariadb:10.6
+    container_name: nextcloud-db
+    restart: always
+    command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW
+    volumes:
+      - /srv/mergerfs/3tb/nextcloud/db:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+
+  app:
+    image: nextcloud
+    container_name: nextcloud-app
+    restart: always
+    depends_on:
+      - db
+    volumes:
+      - /srv/mergerfs/3tb/nextcloud/data:/mnt/nextcloud-mount
+    environment:
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_HOST=${MYSQL_HOST}
+      - NEXTCLOUD_DATA_DIR=${NEXTCLOUD_DATA_DIR}
+      - APACHE_DISABLE_REWRITE_IP=${APACHE_DISABLE_REWRITE_IP}
+      - TRUSTED_PROXIES=${TRUSTED_PROXIES}
+      - OVERWRITEHOST=${OVERWRITEHOST}
+      - OVERWRITEPROTOCOL=${OVERWRITEPROTOCOL}
+    networks:
+      - webservices
+      - default
+
+networks:
+  webservices:
+    external: true
+

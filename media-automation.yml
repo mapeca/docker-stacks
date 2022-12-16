@@ -1,0 +1,158 @@
+version: '3.0'
+
+networks:
+  webservices:
+    external: true
+
+services:
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: lidarr
+    environment:
+      - PUID=1000
+      - GUID=1000
+      - TZ=Europe/Madrid
+    volumes:
+      - /opt/docker/lidarr/config/:/config
+      - /srv/mergerfs/Jellyfin/Temp/Lidarr:/music
+      - /srv/mergerfs/Jellyfin/Temp/Torrent:/downloads
+    # ports:
+    #   - 8686:8686
+    restart: unless-stopped
+    networks:
+      - webservices
+      
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+    volumes:
+      - /opt/docker/radarr/config:/config
+      - /srv/mergerfs/Jellyfin/Temp/Radarr:/movies #optional
+      #- /opt/docker/deluge/downloads:/downloads #optional
+      - /srv/mergerfs/Jellyfin/Temp/Torrent:/downloads
+
+    restart: unless-stopped
+    networks:
+      - webservices
+
+  deluge:
+    image: lscr.io/linuxserver/deluge:latest
+    container_name: deluge
+    environment:
+      - PUID=0
+      - PGID=0
+      - TZ=Europe/Madrid
+      - DELUGE_LOGLEVEL=error #optional
+    volumes:
+      - /opt/docker/deluge/config:/config
+      #- /opt/docker/deluge/downloads:/downloads
+      - /srv/dev-disk-by-uuid-59e91236-c621-4740-bb97-68d829c4ae36/Jellyfin/Temp/Torrent:/downloads
+    ports:
+      # - 8112:8112
+      - 6881:6881
+      - 6881:6881/udp
+    restart: unless-stopped
+    networks:
+      - webservices
+
+  jackett:
+    image: lscr.io/linuxserver/jackett:latest
+    container_name: jackett
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+      - AUTO_UPDATE=true #optional
+      # - RUN_OPTS=<run options here> #optional
+    volumes:
+      - /opt/docker/jackett/config:/config
+      - /opt/docker/jackett/downloads:/downloads
+    # ports:
+    #   - 9117:9117
+    restart: unless-stopped
+    networks:
+      - webservices
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
+
+
+
+  jellyseerr:
+    image: fallenbagel/jellyseerr
+    container_name: jellyseerr
+    environment:
+      - TZ=Europe/Madrid
+    # ports:
+    #   - 5055:5055
+    volumes:
+      - /opt/docker/jellyseerr/config:/app/config
+    restart: unless-stopped
+    networks:
+      - webservices
+
+  tdarr:
+    container_name: tdarr
+    image: ghcr.io/haveagitgat/tdarr:latest
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '6'
+    # ports:
+    #   - 8265:8265 # webUI port
+    #   - 8266:8266 # server port
+    #   - 8267:8267 # Internal node port
+    #   - 8268:8268 # Example extra node port
+    environment:
+      - TZ=Europe/Madrid
+      - PUID=0
+      - PGID=1000
+      - UMASK_SET=002
+      - serverIP=0.0.0.0
+      - serverPort=8266
+      - webUIPort=8265
+      - internalNode=true
+      - nodeID=MyInternalNode
+    volumes:
+      # Image settings
+      - /opt/docker/tdarr/server:/app/server
+      - /opt/docker/tdarr/configs:/app/configs
+      - /opt/docker/tdarr/logs:/app/logs
+      - /srv/mergerfs/Jellyfin/Temp/Transcode_cache:/temp
+      - /srv/mergerfs/Jellyfin/Peliculas:/readOnly/Jellyfin/Peliculas:ro
+      - /srv/mergerfs/Jellyfin/Series:/readOnly/Jellyfin/Series:ro
+      
+      # Automatic radarr transcoding
+      - /srv/mergerfs/Jellyfin/Temp/Radarr:/media/transcode/radarr
+      - /srv/mergerfs/Jellyfin/Temp/Transcoded/Radarr:/media/transcoded/radarr
+
+      # Automatic sonarr transcoding
+      - /srv/mergerfs/Jellyfin/Temp/Sonarr:/media/transcode/sonarr
+      - /srv/mergerfs/Jellyfin/Temp/Transcoded/Sonarr:/media/transcoded/sonarr
+      
+      # Manual Transcode
+      - /srv/mergerfs/Jellyfin/Temp/Transcode/Peliculas:/media/transcode/peliculas
+      - /srv/mergerfs/Jellyfin/Temp/Transcode/Series:/media/transcode/series
+      - /srv/mergerfs/Jellyfin/Temp/Transcoded/Peliculas:/media/transcoded/peliculas
+      - /srv/mergerfs/Jellyfin/Temp/Transcoded/Series:/media/transcoded/series
+    networks:
+      - webservices
+  
+  normalize-watcher:
+    container_name: normalize-watcher
+    image: onedev.mperals.work/mapeca/normalizewatcher:latest
+    restart: unless-stopped
+    environment:
+      - NORMALIZE_MOVIES=/media/movies
+      - NORMALIZED_MOVIES=/media/normalized_movies
+      - NORMALIZE_SHOWS=/media/shows
+      - NORMALIZED_SHOWS=/media/normalized_shows
+    volumes:
+      - /srv/mergerfs/Jellyfin/Temp/Transcoded/Radarr:/media/movies
+      - /srv/mergerfs/Jellyfin/Temp/Normalized/Radarr:/media/normalized_movies
+      - /srv/mergerfs/Jellyfin/Temp/Transcoded/Series:/media/shows
+      - /srv/mergerfs/Jellyfin/Temp/Normalized/Series:/media/normalized_shows

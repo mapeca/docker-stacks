@@ -1,0 +1,24 @@
+version: "3.0"
+
+networks:
+  webservices:
+    external: true
+
+services:
+
+  authelia:
+    container_name: authelia
+    image: docker.io/authelia/authelia:latest
+    restart: unless-stopped
+    networks:
+      - webservices
+    expose:
+      - 9091
+    environment:
+      AUTHELIA_JWT_SECRET_FILE: /secrets/JWT_SECRET
+      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /secrets/STORAGE_ENCRYPTION_KEY
+      TZ: Europe/Madrid
+    volumes:
+      - /opt/docker/authelia/config:/config
+      - /opt/docker/authelia/secrets:/secrets
+

@@ -1,0 +1,57 @@
+version: '3.3'
+services:
+  honeygain:
+    image: honeygain/honeygain
+    container_name: honeygain
+    command: -tou-accept -email ${HONEYGAIN_EMAIL} -pass ${HONEYGAIN_PASSWORD} -device archium
+    restart: always
+
+  packetstream:
+    image: packetstream/psclient:latest
+    container_name: psclient
+    environment:
+      - CID=${PACKETSTREAM_CID}
+    restart: on-failure:5
+
+  iproyal:
+    image: iproyal/pawns-cli:latest
+    container_name: iproyal
+    restart: on-failure:50
+    command: -email=${IPROYAL_EMAIL} -password=${IPROYAL_PASSWORD} -device-name=archium -device-id=archium1 -accept-tos
+
+  myst:
+    image: mysteriumnetwork/myst
+    container_name: myst
+    restart: always
+    ports:
+      - 4449:4449
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - /opt/docker/myst:/var/lib/mysterium-node
+    command: service --agreed-terms-and-conditions
+
+  presearch:
+    image: presearch/node:latest
+    container_name: presearch-node
+    restart: always
+    volumes:
+      - /opt/docker/presearch/keys:/app/node/.keys
+    environment:
+      - REGISTRATION_CODE=${PRESEARCH_REGISTRATION_CODE}
+      - DESCRIPTION="Selfhosted 6c/16Gb"
+
+  koblas:
+    image: ynuwenhof/koblas:latest
+    container_name: koblas
+    restart: unless-stopped
+    ports:
+      - 1080:1080
+    environment:
+      RUST_LOG: debug
+      # KOBLAS_LIMIT: 256
+      # KOBLAS_NO_AUTHENTICATION: false
+      # KOBLAS_ANONYMIZATION: true
+    volumes:
+      - /opt/docker/koblas/config.toml:/etc/koblas/config.toml
+

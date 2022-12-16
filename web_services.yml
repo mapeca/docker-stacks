@@ -1,0 +1,123 @@
+version: "2"
+
+networks:
+  webservices:
+    external: true
+
+services:
+  homer:
+    image: b4bz/homer
+    container_name: homer
+    volumes:
+      - /opt/docker/homer/assets:/www/assets
+    user: 1000:1000 # default
+    environment:
+      - INIT_ASSETS=1 # default
+    restart: unless-stopped
+    networks:
+      - webservices
+
+  jellyfin:
+    image: onedev.mperals.work/mapeca/customized-jellyfin:latest
+    container_name: jellyfin
+    environment:
+      - DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=0
+      - HEALTHCHECK_URL=http://localhost:8096/health
+      - JELLYFIN_CACHE_DIR=/cache
+      - JELLYFIN_CONFIG_DIR=/config/config
+      - JELLYFIN_DATA_DIR=/config
+      - JELLYFIN_FFMPEG=/usr/lib/jellyfin-ffmpeg/ffmpeg
+      - JELLYFIN_LOG_DIR=/config/log
+      - JELLYFIN_WEB_DIR=/jellyfin/jellyfin-web
+      - LANG=en_US.UTF-8
+      - LANGUAGE=en_US:en
+      - LC_ALL=en_US.UTF-8
+      - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
+      - NVIDIA_VISIBLE_DEVICES=all
+      - PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      - PGID=100
+      - PUID=1000
+      - TZ=Europe/Madrid
+    volumes:
+      - /opt/docker/jellyfin:/config
+      - /srv/mergerfs/Jellyfin/Peliculas:/data/Peliculas:ro
+      - /srv/mergerfs/Jellyfin/Series:/data/Series:ro
+      - /srv/mergerfs/Jellyfin/Categorias:/data/Categorias:ro
+      - /srv/mergerfs/Jellyfin/Documentales:/data/Documentales:ro
+      - /srv/remotemount:/data/remotemount
+    ports:
+      - 7359:7359/udp
+      - 1900:1900/udp
+    restart: unless-stopped
+    networks:
+      - webservices
+
+  syncthing:
+    container_name: syncthing
+    image: syncthing/syncthing
+    user: 1000:100
+    volumes:
+      - /opt/docker/syncthing:/var/syncthing/config
+      - /srv/dev-disk-by-uuid-59e91236-c621-4740-bb97-68d829c4ae36/Syncthing/:/var/syncthing/
+    ports:
+      - 8384:8384
+      - 22000:22000/tcp
+      - 22000:22000/udp
+      - 21027:21027/udp
+    restart: unless-stopped
+    networks:
+      - webservices
+
+  wakapi:
+    container_name: wakapi_server
+    image: ghcr.io/muety/wakapi:latest
+    user: 1000:1000
+    environment:
+      - WAKAPI_PASSWORD_SALT=${WAKAPI_SALT}
+      - WAKAPI_PUBLIC_URL=${WAKAPI_PUBLIC_URL}
+      - WAKAPI_TRUST_REVERSE_PROXY_IPS=${TRUSTED_PROXIES}
+      - TZ=Europe/Madrid
+    volumes:
+      - wakapi_server:/data
+    restart: unless-stopped
+    networks:
+      - webservices
+
+  pingvin-share:
+    image: stonith404/pingvin-share
+    container_name: pingvin
+    restart: unless-stopped
+    environment:
+      - TRUST_PROXY=true
+    volumes:
+      - "/srv/mergerfs/3tb/Pingvin/data:/opt/app/backend/data"
+      - "/srv/mergerfs/3tb/Pingvin/data/images:/opt/app/frontend/public/img"
+    networks:
+      - webservices
+
+  ovo-demo:
+    image: onedev.mperals.work/mapeca/ovo:latest
+    container_name: ovo-demo
+    restart: unless-stopped
+    environment:
+      - OVO_TMDB_API_KEY=${OVO_TMDB_API_KEY}
+    volumes:
+      - /srv/mergerfs/Jellyfin/Peliculas:/data/Peliculas:ro
+      - /srv/mergerfs/Jellyfin/Series:/data/Series:ro
+    networks:
+      - webservices
+
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${VAULTWARDEN_DOMAIN}
+    volumes:
+      - ./vw-data/:/data/
+    networks:
+      - webservices
+
+volumes:
+  wakapi_server:
+

@@ -1,0 +1,32 @@
+version: "3.0"
+
+services:
+  key-server:
+    container_name: "key-server"
+    image: onedev.mperals.work/mapeca/tsb-server:latest
+    restart: "on-failure:5"
+    environment:
+      - TELEGRAM_API_ID=${TELEGRAM_API_ID}
+      - TELEGRAM_API_HASH=${TELEGRAM_API_HASH}
+      - TELEGRAM_SESSION_STRING=${TELEGRAM_SESSION_STRING}
+      - TELEGRAM_WATCHING_CHANNEL_USERNAME=${TELEGRAM_WATCHING_CHANNEL_USERNAME}
+      - TZ=Europe/Madrid
+
+  client-mp:
+    container_name: "marcperal23-client"
+    image: onedev.mperals.work/mapeca/tsb-client:latest
+    restart: "on-failure:5"
+    environment:
+      - WS_URL=${WS_URL}
+      - STEAM_TOKEN=${C1_TOKEN}
+      - TZ=Europe/Madrid
+
+  client-SolemnlyWrithing:
+    container_name: "SolemnlyWrithing-client"
+    image: onedev.mperals.work/mapeca/tsb-client:latest
+    restart: "on-failure:5"
+    environment:
+      - WS_URL=${WS_URL}
+      - STEAM_TOKEN=${C2_TOKEN}
+      - TZ=Europe/Madrid
+

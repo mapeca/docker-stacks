@@ -1,0 +1,85 @@
+version: '3'
+
+networks:
+  webservices:
+    external: true
+
+services:
+  netdata:
+    image: netdata/netdata:stable
+    container_name: netdata
+    hostname: mon.jandhii.cf # set to fqdn of host
+    #restart: unless-stopped
+    restart: always
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - apparmor:unconfined
+    volumes:
+      - /opt/docker/netdata/config:/etc/netdata
+      - netdatalib:/var/lib/netdata
+      - netdatacache:/var/cache/netdata
+      - /etc/passwd:/host/etc/passwd:ro
+      - /etc/group:/host/etc/group:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc/os-release:/host/etc/os-release:ro
+      - /srv/mergerfs/Jellyfin:/srv/mergerfs/Jellyfin:ro
+    networks:
+      - webservices
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    restart: always
+    environment:
+        DOCKER_CONFIG: /config
+    volumes:
+      # - /opt/docker/watchtower/:/config/
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/timezone:/etc/timezone:ro
+      - /root/.docker/config.json:/config/config.json
+    command: --interval 3600
+
+  smokeping:
+    image: lscr.io/linuxserver/smokeping:latest
+    container_name: smokeping
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+    volumes:
+      - /opt/docker/smokeping/config:/config
+      - /opt/docker/smokeping/data:/data
+    ports:
+      - 8020:80
+
+  librespeed:
+    image: lscr.io/linuxserver/librespeed:latest
+    container_name: librespeed
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+      - PASSWORD=librespeedDatabasePassword
+    volumes:
+      - /opt/docker/librespeed:/config
+    restart: unless-stopped
+    networks:
+      - webservices
+
+  uptimekuma:
+    image: louislam/uptime-kuma
+    container_name: uptimekuma
+    restart: always
+    networks:
+      - webservices
+    volumes:
+      - uptime-kuma:/app/data
+
+volumes:
+  netdatalib:
+  netdatacache:
+  uptime-kuma:
+

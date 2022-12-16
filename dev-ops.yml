@@ -1,0 +1,36 @@
+version: '3'
+
+networks:
+  webservices:
+    external: true
+
+services:
+  forgejo:
+    image: codeberg.org/forgejo/forgejo:7
+    container_name: forgejo
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+    restart: always
+    networks:
+      - webservices
+      - default
+    volumes:
+      - /opt/docker/forgejo:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+
+  onedev:
+      image: 1dev/server
+      container_name: onedev
+      restart: on-failure:10
+      networks:
+        - webservices
+        - default
+      volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+          - /opt/docker/onedev:/opt/onedev
+      # ports:
+      #     - 6610:6610
+      #     - 6611:6611
+
