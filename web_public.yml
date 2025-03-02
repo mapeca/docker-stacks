@@ -3,6 +3,8 @@ version: "3.7"
 networks:
   webservices:
     external: true
+  warp-network:
+    external: true
 
 services:
   caddy:
@@ -34,17 +36,7 @@ services:
     volumes:
       - /opt/docker/cloudflare-ddns/config.yaml:/app/config.yaml
 
-  # cloudflared:
-  #   image: cloudflare/cloudflared:latest
-  #   container_name: cloudflared
-  #   restart: unless-stopped
-  #   command: tunnel --no-autoupdate run
-  #   environment:
-  #     - TUNNEL_TOKEN=${CLOUDFLARED_TUNNEL_TOKEN}
-  #   networks:
-  #     - webservices
-  #   extra_hosts:
-  #     - host.docker.internal:host-gateway
+
 
   zerotier:
     container_name: zerotier-one
@@ -92,3 +84,14 @@ services:
       - webservices
     restart: unless-stopped
 
+  warp-proxy:
+    image: onedev.mperals.work/mapeca/warp-proxy:latest
+    container_name: warp-proxy
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.conf.default.route_localnet=1
+    ports:
+      - 40000:40000
+    networks:
+      - warp-network

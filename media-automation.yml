@@ -3,6 +3,8 @@ version: '3.0'
 networks:
   webservices:
     external: true
+  warp-network:
+    external: true
 
 services:
   lidarr:
@@ -76,6 +78,7 @@ services:
     restart: unless-stopped
     networks:
       - webservices
+      - warp-network
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
 
