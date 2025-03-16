@@ -113,6 +113,7 @@ services:
     restart: unless-stopped
     environment:
       DOMAIN: ${VAULTWARDEN_DOMAIN}
+      ADMIN_TOKEN: ${VAULTWARDEN_ADMIN_TOKEN}
     volumes:
       - ./vw-data/:/data/
     networks:
