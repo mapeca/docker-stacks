@@ -41,6 +41,15 @@ services:
       - REGISTRATION_CODE=${PRESEARCH_REGISTRATION_CODE}
       - DESCRIPTION="Selfhosted 6c/16Gb"
 
+  repocket:
+    image: repocket/repocket:latest
+    container_name: repocket
+    restart: always
+    environment:
+      - RP_EMAIL=${REPOCKET_EMAIL}
+      - RP_API_KEY=${REPOCKET_API_KEY}
+
+  # SOCKS PROXY
   koblas:
     image: ynuwenhof/koblas:latest
     container_name: koblas

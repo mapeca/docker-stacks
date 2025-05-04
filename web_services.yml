@@ -115,7 +115,7 @@ services:
       DOMAIN: ${VAULTWARDEN_DOMAIN}
       ADMIN_TOKEN: ${VAULTWARDEN_ADMIN_TOKEN}
     volumes:
-      - ./vw-data/:/data/
+      - /opt/docker/Vaultwarden/:/data
     networks:
       - webservices
 

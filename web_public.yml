@@ -84,14 +84,3 @@ services:
       - webservices
     restart: unless-stopped
 
-  warp-proxy:
-    image: onedev.mperals.work/mapeca/warp-proxy:latest
-    container_name: warp-proxy
-    cap_add:
-      - NET_ADMIN
-    sysctls:
-      - net.ipv4.conf.default.route_localnet=1
-    ports:
-      - 40000:40000
-    networks:
-      - warp-network
