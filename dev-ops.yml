@@ -5,20 +5,20 @@ networks:
     external: true
 
 services:
-  forgejo:
-    image: codeberg.org/forgejo/forgejo:7
-    container_name: forgejo
-    environment:
-      - USER_UID=1000
-      - USER_GID=1000
-    restart: always
-    networks:
-      - webservices
-      - default
-    volumes:
-      - /opt/docker/forgejo:/data
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
+  # forgejo:
+  #   image: codeberg.org/forgejo/forgejo:7
+  #   container_name: forgejo
+  #   environment:
+  #     - USER_UID=1000
+  #     - USER_GID=1000
+  #   restart: always
+  #   networks:
+  #     - webservices
+  #     - default
+  #   volumes:
+  #     - /opt/docker/forgejo:/data
+  #     - /etc/timezone:/etc/timezone:ro
+  #     - /etc/localtime:/etc/localtime:ro
 
   onedev:
       image: 1dev/server
