@@ -26,6 +26,7 @@ services:
       - /opt/docker/caddy/config:/config
       - /opt/docker/caddy/log:/srv
       - /opt/docker/goaccess/reports:/log-reports
+      - /srv/mergerfs/3tb/unitybuilds:/unitybuilds
     extra_hosts:
       - host.docker.internal:host-gateway
 
