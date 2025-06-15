@@ -38,19 +38,35 @@ services:
       - /opt/docker/cloudflare-ddns/config.yaml:/app/config.yaml
 
 
+  # zerotier client
+  # zerotier:
+  #   container_name: zerotier-one
+  #   cap_add:
+  #     - NET_ADMIN
+  #     - SYS_ADMIN
+  #   devices:
+  #     - /dev/net/tun
+  #   network_mode: host
+  #   restart: unless-stopped
+  #   volumes:
+  #     - /var/lib/zerotier-one:/var/lib/zerotier-one
+  #   image: zyclonite/zerotier
 
-  zerotier:
-    container_name: zerotier-one
-    cap_add:
-      - NET_ADMIN
-      - SYS_ADMIN
-    devices:
-      - /dev/net/tun
-    network_mode: host
-    restart: unless-stopped
-    volumes:
-      - /var/lib/zerotier-one:/var/lib/zerotier-one
-    image: zyclonite/zerotier
+  # Zero tier controller
+  # zerotier:
+  #     image: zerotier/zerotier:latest
+  #     container_name: zerotier
+  #     restart: unless-stopped
+  #     network_mode: "host"
+  #     privileged: true
+  #     environment:
+  #       - ZT_AUTH_TOKEN=${ZT_AUTH_TOKEN}
+  #     volumes:
+  #       - /opt/docker/zerotier/data/zerotier-one:/var/lib/zerotier-one
+  #     cap_add:
+  #       - NET_ADMIN
+  #       - SYS_ADMIN
+
 
   adguard:
     image: adguard/adguardhome
